@@ -79,7 +79,6 @@ class HD_WP_Settings_Wrapper {
 	 */
 	var $dir_uri;
 
-
 	/**
 	 * Constructor
 	 *
@@ -90,10 +89,10 @@ class HD_WP_Settings_Wrapper {
 	function __construct( $options = array(), $fields = array() ) {
 
 		// Set directory path
-		$this->dir_path = dirname( __FILE__ );
+		$this->dir_path = str_replace( '\\', '/', dirname( __FILE__ ) );
 
 		// Set directory uri
-		$this->dir_uri  = trailingslashit( home_url() ) . str_replace( ABSPATH, '', $this->dir_path );
+		$this->dir_uri  = trailingslashit( home_url() ) . str_replace( str_replace( '\\', '/', ABSPATH ), '', $this->dir_path );
 
 		// Default page options
 		$options_default = array(
@@ -132,7 +131,7 @@ class HD_WP_Settings_Wrapper {
 		// Collect all tabs
 		foreach ( $this->fields as $field_setting => $field )
 			if ( 'tab' == $field['type'] )
-				$this->tabs[ $field_setting ] = $field['title'];
+				$this->tabs[ sanitize_title( $field_setting ) ] = $field['title'];
 
 		// Set active tab
 		if ( ! empty( $this->tabs ) ) {
@@ -140,8 +139,10 @@ class HD_WP_Settings_Wrapper {
 				$this->active_tab = $_GET['tab'];
 			elseif ( isset( $_REQUEST[ $this->options['menu_slug'] . '_active_tab' ] ) && array_key_exists( $_REQUEST[ $this->options['menu_slug'] . '_active_tab' ], (array) $this->tabs ) )
 				$this->active_tab = $_REQUEST[ $this->options['menu_slug'] . '_active_tab' ];
-			else
-				$this->active_tab = reset( array_keys( $this->tabs ) );
+			else {
+				$tab_keys = array_keys( (array) $this->tabs );
+				$this->active_tab = reset( $tab_keys );
+			}
 		}
 
 		extract( $this->options );
@@ -244,7 +245,7 @@ class HD_WP_Settings_Wrapper {
 						foreach ( (array) $this->tabs as $tab_id => $tab_name )
 							printf(
 								'<a href="%s" class="nav-tab%s">%s</a>',
-								add_query_arg( array( 'page' => $this->options['menu_slug'], 'tab' => $tab_id ), admin_url( 'admin.php' ) ),
+								add_query_arg( array( 'page' => $this->options['menu_slug'], 'tab' => $tab_id ) ),
 								( $this->active_tab == $tab_id ) ? ' nav-tab-active' : '',
 								esc_html( $tab_name )
 							);
