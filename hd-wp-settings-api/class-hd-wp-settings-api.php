@@ -4,20 +4,24 @@ WordPress Settings API Wrapper Class
 URI: http://github.com/harishdasari
 Author: Harish Dasari
 Author URI: http://twitter.com/harishdasari
-Version: 1.0
+Version: 1.1
 */
 
 /*=================================================================================
 	WordPress Settings API Wrapper Class
  =================================================================================*/
 
+require_once( 'class-hd-html-helper.php' );
+
+if ( ! class_exists( 'HD_WP_Settings_API' ) ) :
 /**
  * WordPress Settings API Wrapper Class
  *
- * @version 1.0
- * @author Harish Dasari
+ * @version 1.1
+ * @author  Harish Dasari
+ * @link    http://github.com/harishdasari
  */
-class HD_WP_Settings_Wrapper {
+class HD_WP_Settings_API {
 
 	/**
 	 * Holds Options for Menu Page
@@ -68,6 +72,12 @@ class HD_WP_Settings_Wrapper {
 	var $hook_suffix     = false;
 
 	/**
+	 * Holds instance of HD_HTML_Helper class
+	 * @var object
+	 */
+	var $html_helper;
+
+	/**
 	 * Holds Current Folder Path
 	 * @var string
 	 */
@@ -115,9 +125,12 @@ class HD_WP_Settings_Wrapper {
 
 		$this->fields  = (array) $fields;
 
-		add_action( 'admin_menu', array( $this, 'hd_register_menu' ) );
-		add_action( 'admin_init', array( $this, 'hd_register_sfs' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'hd_enqueue_styles_scripts' ) );
+		$this->html_helper = class_exists( 'HD_HTML_Helper' ) ? new HD_HTML_Helper : false;
+
+		add_action( 'admin_menu', array( $this, 'register_menu' ) );
+		add_action( 'admin_init', array( $this, 'register_options' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_styles_scripts' ) );
+		add_action( 'admin_notices', array( $this, 'show_notices' ) );
 
 	}
 
@@ -126,7 +139,7 @@ class HD_WP_Settings_Wrapper {
 	 *
 	 * @return null
 	 */
-	function hd_register_menu() {
+	function register_menu() {
 
 		// Collect all tabs
 		foreach ( $this->fields as $field_setting => $field )
@@ -148,9 +161,9 @@ class HD_WP_Settings_Wrapper {
 		extract( $this->options );
 
 		if ( empty( $parent_slug ) )
-			$this->hook_suffix = add_menu_page( $page_title, $menu_title, $capability, $menu_slug, array( $this, 'hd_settings_page' ), $icon, $position );
+			$this->hook_suffix = add_menu_page( $page_title, $menu_title, $capability, $menu_slug, array( $this, 'settings_page' ), $icon, $position );
 		else
-			$this->hook_suffix = add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, $menu_slug, array( $this, 'hd_settings_page' ) );
+			$this->hook_suffix = add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, $menu_slug, array( $this, 'settings_page' ) );
 
 	}
 
@@ -160,13 +173,13 @@ class HD_WP_Settings_Wrapper {
 	 * @param  string $hook_suffix
 	 * @return null
 	 */
-	function hd_enqueue_styles_scripts( $hook_suffix ) {
+	function enqueue_styles_scripts( $hook_suffix ) {
 
 		if ( $this->hook_suffix !== $hook_suffix )
 			return;
 
 		wp_enqueue_style( 'wp-color-picker' );
-		wp_enqueue_script( 'hd-settings-wrapper', $this->dir_uri . '/js/admin.js', array( 'jquery', 'wp-color-picker' ), null, true );
+		wp_enqueue_script( 'hd-html-helper', $this->dir_uri . '/js/admin.js', array( 'jquery', 'wp-color-picker' ), null, true );
 
 	}
 
@@ -175,7 +188,7 @@ class HD_WP_Settings_Wrapper {
 	 *
 	 * @return mull
 	 */
-	function hd_register_sfs() {
+	function register_options() {
 
 		foreach ( $this->fields as $field_setting => $field ) {
 
@@ -193,19 +206,22 @@ class HD_WP_Settings_Wrapper {
 				$this->current_section = empty( $field['id'] ) ? 'default' : $field['id'] ;
 
 				if ( empty( $this->current_tab ) )
-					add_settings_section( $field['id'], $field['title'], array( $this, 'hd_print_section' ), $this->options['menu_slug'] );
+					add_settings_section( $field['id'], $field['title'], array( $this, 'print_section' ), $this->options['menu_slug'] );
 				else
-					add_settings_section( $field['id'], $field['title'], array( $this, 'hd_print_section' ), $this->options['menu_slug'] . '_' . $this->current_tab );
+					add_settings_section( $field['id'], $field['title'], array( $this, 'print_section' ), $this->options['menu_slug'] . '_' . $this->current_tab );
 
 			} elseif ( in_array( $field['type'], array( 'text', 'textarea', 'select', 'checkbox', 'radio', 'multiselect', 'multicheck', 'upload', 'color', 'editor' ) ) ) {
 
+				// Set Field Value
+				$field['value'] = get_option( $field['id'] );
+
 				if ( empty( $this->current_tab ) )
-					add_settings_field( $field['id'], $field['title'], array( $this, 'hd_print_' . $field['type'] . '_input' ), $this->options['menu_slug'], $this->current_section, $field );
+					add_settings_field( $field['id'], $field['title'], array( $this->html_helper, 'display_field' ), $this->options['menu_slug'], $this->current_section, $field );
 				else
-					add_settings_field( $field['id'], $field['title'], array( $this, 'hd_print_' . $field['type'] . '_input' ), $this->options['menu_slug'] . '_' . $this->current_tab, $this->current_section, $field );
+					add_settings_field( $field['id'], $field['title'], array( $this->html_helper, 'display_field' ), $this->options['menu_slug'] . '_' . $this->current_tab, $this->current_section, $field );
 
 				if ( empty( $this->current_tab ) || $this->current_tab == $this->active_tab )
-					register_setting( $this->options['menu_slug'], $field['id'], array( $this, 'hd_sanitize_setting' ) );
+					register_setting( $this->options['menu_slug'], $field['id'], array( $this, 'sanitize_setting' ) );
 
 				if ( ! empty( $field['default'] ) )
 					add_option( $field['id'], $field['default'] );
@@ -217,21 +233,39 @@ class HD_WP_Settings_Wrapper {
 	}
 
 	/**
+	 * Show Admin Notices
+	 *
+	 * @return null
+	 */
+	function show_notices() {
+
+		global $parent_file;
+
+		if ( 'options-general.php' == $parent_file )
+			return;
+
+		if ( isset( $_GET['page'] ) && $_GET['page'] == $this->options['menu_slug'] )
+			settings_errors();
+
+	}
+
+	/**
 	 * Print Settings Page
 	 *
 	 * @return null
 	 */
-	function hd_settings_page() {
+	function settings_page() {
 
 		?>
 		<div class="wrap <?php echo sanitize_html_class( $this->options['menu_slug'] ); ?>">
 
 			<h2><?php echo esc_html( $this->options['page_title'] ); ?></h2>
-			<?php settings_errors(); ?>
 
 			<form action="<?php echo admin_url( 'options.php' ) ?>" method="post">
 
 				<?php settings_fields( $this->options['menu_slug'] ); ?>
+
+				<?php do_action( 'hd_settings_api_page_before', $this->hook_suffix, $this->options, $this->fields ); ?>
 
 				<table class="form-table">
 					<?php do_settings_fields( $this->options['menu_slug'], 'default' ); ?>
@@ -251,17 +285,26 @@ class HD_WP_Settings_Wrapper {
 							);
 						?>
 					</h2>
+
+					<?php do_action( 'hd_settings_api_tab_before', $this->hook_suffix, $this->active_tab, $this->options, $this->fields ); ?>
+
 					<table class="form-table">
 						<?php do_settings_fields( $this->options['menu_slug'] . '_' . $this->active_tab, 'default' ); ?>
 					</table>
 
 					<?php do_settings_sections( $this->options['menu_slug'] . '_' . $this->active_tab ); ?>
 
+					<?php do_action( 'hd_settings_api_tab_after', $this->hook_suffix, $this->active_tab, $this->options, $this->fields ); ?>
+
 					<input type="hidden" name="<?php echo esc_attr( $this->options['menu_slug'] . '_active_tab' ); ?>" value="<?php echo esc_attr( $this->active_tab ); ?>"/>
 
 				<?php } ?>
 
-				<?php submit_button(); ?>
+				<?php do_action( 'hd_settings_api_page_after', $this->hook_suffix, $this->options, $this->fields ); ?>
+
+				<div class="clear"></div>
+
+				<?php submit_button( apply_filters( 'hd_settings_api_save_button_text', __( 'Save Changes' ) ) ); ?>
 
 			</form>
 
@@ -276,264 +319,10 @@ class HD_WP_Settings_Wrapper {
 	 * @param  array $args Section Options
 	 * @return null
 	 */
-	function hd_print_section( $args ) {
+	function print_section( $args ) {
 
-		echo $this->fields[ $args['id'] ]['desc'];
-
-	}
-
-	/*===[ Input Fields ]===*/
-
-	/**
-	 * Print Text Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_text_input( $field ) {
-
-		printf(
-			'<input type="text" name="%s" id="%s" value="%s" class="regular-text"/>',
-			esc_attr( $field['id'] ),
-			esc_attr( $field['id'] ),
-			esc_attr( get_option( $field['id'] ) )
-		);
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Textarea Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_textarea_input( $field ) {
-
-		printf(
-			'<textarea name="%s" id="%s" rows="5" cols="40">%s</textarea>',
-			esc_attr( $field['id'] ),
-			esc_attr( $field['id'] ),
-			esc_textarea( get_option( $field['id'] ) )
-		);
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Select Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_select_input( $field ) {
-
-		$selected_value = get_option( $field['id'] );
-
-		printf(
-			'<select name="%s" id="%s">',
-			esc_attr( $field['id'] ),
-			esc_attr( $field['id'] )
-		);
-
-		if ( ! empty( $field['choices'] ) ) {
-			foreach ( (array) $field['choices'] as $value => $label )
-				printf(
-					'<option value="%s"%s>%s</option>',
-					esc_attr( $value ),
-					selected( $selected_value, $value, false ),
-					esc_html( $label )
-				);
-		}
-
-		echo '</select>';
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Checkbox Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_checkbox_input( $field ) {
-
-		printf(
-			'<label><input type="checkbox" name="%s" id="%s"%s> %s</label>',
-			esc_attr( $field['id'] ),
-			esc_attr( $field['id'] ),
-			checked( get_option( $field['id'] ), 'on', false ),
-			esc_html( $field['desc'] )
-		);
-
-	}
-
-	/**
-	 * Print Radio Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_radio_input( $field ) {
-
-		$selected_value = get_option( $field['id'] );
-
-		if ( ! empty( $field['choices'] ) ) {
-			foreach ( (array) $field['choices'] as $value => $label )
-				printf(
-					'<label><input type="radio" name="%s" id="" value="%s"%s> %s</label><br/>',
-					esc_attr( $field['id'] ),
-					esc_attr( $value ),
-					checked( $selected_value, $value, false ),
-					esc_html( $label )
-				);
-		}
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Multi-Select Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_multiselect_input( $field ) {
-
-		$selected_value = (array) get_option( $field['id'] );
-
-		printf(
-			'<select name="%s[]" id="%s" multiple>',
-			esc_attr( $field['id'] ),
-			esc_attr( $field['id'] )
-		);
-
-		if ( ! empty( $field['choices'] ) ) {
-			foreach ( (array) $field['choices'] as $value => $label )
-				printf(
-					'<option value="%s"%s>%s</option>',
-					esc_attr( $value ),
-					selected( in_array( $value, $selected_value ), true, false ),
-					esc_html( $label )
-				);
-		}
-
-		echo '</select>';
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Multi-Checkbox Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_multicheck_input( $field ) {
-
-		$selected_value = (array) get_option( $field['id'] );
-
-		if ( ! empty( $field['choices'] ) ) {
-			foreach ( (array) $field['choices'] as $value => $label )
-				printf(
-					'<label><input type="checkbox" name="%s[]" id="" value="%s"%s> %s</label><br/>',
-					esc_attr( $field['id'] ),
-					esc_attr( $value ),
-					checked( in_array( $value, $selected_value ), true, false ),
-					esc_html( $label )
-				);
-		}
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Upload Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_upload_input( $field ) {
-
-		// dang! dang!! dang!!!
-		// We require to enqueue Media Uploader Scripts and Styles
-		wp_enqueue_media();
-
-		printf(
-			'<input type="text" name="%s" id="%s" value="%s" class="regular-text hd-upload-input"/><input type="button" value="%s" class="hd-upload-button button button-secondary" id="hd_upload_%s"/>',
-			esc_attr( $field['id'] ),
-			esc_attr( $field['id'] ),
-			esc_attr( get_option( $field['id'] ) ),
-			__( 'Upload' ),
-			esc_attr( $field['id'] )
-		);
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Color Picker Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_color_input( $field ) {
-
-		$default_color = empty( $field['default'] ) ? '' : ' data-default-color="' . esc_attr( $field['default'] ) . '"';
-
-		printf(
-			'<input type="text" name="%s" id="%s" value="%s" class="hd-color-picker"%s/>',
-			esc_attr( $field['id'] ),
-			esc_attr( $field['id'] ),
-			esc_attr( get_option( $field['id'] ) ),
-			$default_color
-		);
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print TinyMCE Editor Input
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_editor_input( $field ) {
-
-		$settings = array(
-			'media_buttons' => false,
-			'textarea_rows' => 5,
-			'textarea_cols' => 45,
-		);
-
-		$content = get_option( $field['id'] );
-		$content = empty( $content ) ? '' : $content;
-
-		wp_editor( $content, $field['id'], $settings );
-
-		$this->hd_print_help( $field );
-
-	}
-
-	/**
-	 * Print Help/Descripting for field
-	 *
-	 * @param  array $field Input Options
-	 * @return null
-	 */
-	function hd_print_help( $field ) {
-
-		if ( ! empty( $field['desc'] ) )
-			echo '<p class="description">' . wp_kses_data( $field['desc'] ) . '</p>';
+		if ( isset( $this->fields[ $args['id'] ]['desc'] ) )
+			echo $this->fields[ $args['id'] ]['desc'];
 
 	}
 
@@ -543,7 +332,7 @@ class HD_WP_Settings_Wrapper {
 	 * @param  mixed $new_value Submitted new value
 	 * @return mixed            Sanitized value
 	 */
-	function hd_sanitize_setting( $new_value ) {
+	function sanitize_setting( $new_value ) {
 
 		$setting = str_replace( 'sanitize_option_', '', current_filter() );
 
@@ -590,7 +379,7 @@ class HD_WP_Settings_Wrapper {
 				break;
 
 			default :
-				return $new_value;
+				return apply_filters( 'hd_settings_api_sanitize_option', $new_value, $field, $setting );
 				break;
 
 		}
@@ -615,4 +404,6 @@ class HD_WP_Settings_Wrapper {
 
 	}
 
-} // HD_WP_Settings_Wrapper end
+} // HD_WP_Settings_API end
+
+endif; // class_exists check

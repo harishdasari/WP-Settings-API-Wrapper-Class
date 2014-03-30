@@ -23,11 +23,11 @@ You can add 10 different types of Input fields and Section also it supports Word
 10. Editor
 
 ###Installation
-Copy the Directory `hd-wp-settings-wrapper` into your theme or plugin folder.
+Copy the Directory `hd-wp-settings-api` into your theme or plugin folder.
 
 Include the following code in your theme `functions.php` file or plugin file.
 
-	include	'hd-wp-settings-wrapper/hd-wp-settings-wrapper.php';
+	require_once( 'hd-wp-settings-api/class-hd-wp-settings-api.php' );
 
 ###Usage
 First you need to create
@@ -79,7 +79,7 @@ Add **input** field options and give unique `option name` as key.
 
 Alternatively you can add **Sections** and **Tabs** as well.
 
-Full list of input field emamples, section and tabs.
+Full list of input field emamples, sections and tabs.
 
 1. **To add Text Input**
 
@@ -145,15 +145,16 @@ Full list of input field emamples, section and tabs.
 
 		'hd_multiselect_setting' => array(
 			'title'   => 'Multi Select Input',
-			'type'    => 'multiselect',
+			'type'    => 'select',
 			'default' => array( 'one', 'three' ),
 			'choices' => array(
 				'one'   => 'Option 1',
 				'two'   => 'Option 2',
 				'three' => 'Option 3'
 			),
-			'desc'    => 'Example Multi Select Input',
-			'sanit'   => 'nohtml',
+			'multiple' => true,
+			'desc'     => 'Example Multi Select Input',
+			'sanit'    => 'nohtml',
 		)
 
 7. **To add Multi-Checkbox Input**
@@ -212,7 +213,7 @@ Full list of input field emamples, section and tabs.
 12. **To add Tab**
 
 		'hd_tab_id' => array(
-			'title' => 'Tab Titlte',
+			'title' => 'Tab Title',
 			'type'  => 'tab',
 		)
 
@@ -221,7 +222,7 @@ Full list of input field emamples, section and tabs.
 
 	<?php
 
-	include	'hd-wp-settings-wrapper/hd-wp-settings-wrapper.php';
+	require_once( 'hd-wp-settings-api/hd-wp-settings-api.php' );
 
 	$example_options = array(
 		'page_title'  => 'Example Options Page',
@@ -240,17 +241,17 @@ Full list of input field emamples, section and tabs.
 			'desc'    => 'Example Text Input',
 			'sanit'   => 'nohtml',
 		),
-		'hd_section_1' => array(
-			'title'   => 'Example Section',
-			'type'    => 'section',
-			'desc'    => 'Section Description goes here',
-		),
 		'hd_textarea_setting' => array(
 			'title'   => 'Textarea Input',
 			'type'    => 'textarea',
 			'default' => 'Hello World!',
 			'desc'    => 'Example Textarea Input',
 			'sanit'   => 'nohtml',
+		),
+		'hd_section_1' => array(
+			'title'   => 'Example Section',
+			'type'    => 'section',
+			'desc'    => 'Section Description goes here',
 		),
 		'hd_checkbox_setting' => array(
 			'title'   => 'Checkbox Input',
@@ -271,6 +272,10 @@ Full list of input field emamples, section and tabs.
 			'desc'    => 'Example Radio Input',
 			'sanit'   => 'nohtml',
 		),
+		'hd_tab_1'  => array(
+			'title' => 'Tab 1',
+			'type' => 'tab',
+		),
 		'hd_select_setting' => array(
 			'title'   => 'Select Input',
 			'type'    => 'select',
@@ -285,15 +290,16 @@ Full list of input field emamples, section and tabs.
 		),
 		'hd_multiselect_setting' => array(
 			'title'   => 'Multi Select Input',
-			'type'    => 'multiselect',
+			'type'    => 'select',
 			'default' => array( 'one', 'three' ),
 			'choices' => array(
 				'one'   => 'Option 1',
 				'two'   => 'Option 2',
 				'three' => 'Option 3'
 			),
-			'desc'    => 'Example Multi Select Input',
-			'sanit'   => 'nohtml',
+			'multiple' => true,
+			'desc'     => 'Example Multi Select Input',
+			'sanit'    => 'nohtml',
 		),
 		'hd_multicheck_setting' => array(
 			'title'   => 'Multi Checkbox Input',
@@ -306,6 +312,10 @@ Full list of input field emamples, section and tabs.
 			),
 			'desc'    => 'Example Multi Checkbox Input',
 			'sanit'   => 'nohtml',
+		),
+		'hd_tab_2' => array(
+			'title' => 'Tab 2',
+			'type'  => 'tab',
 		),
 		'hd_upload_setting' => array(
 			'title'   => 'Upload Input',
@@ -330,6 +340,53 @@ Full list of input field emamples, section and tabs.
 		),
 	);
 
-	new HD_WP_Settings_Wrapper( $example_options, $example_fields );
+	$example_settings = new HD_WP_Settings_API( $example_options, $example_fields );
 
+
+### Actions and Filters
+
+**Actions**
+
+
+1. `add_action( 'hd_settings_api_page_before', 'function_name' );`
+
+	Callback arguments : `$hook_suffix`, `$options`, `$fields`
+
+2. `add_action( 'hd_settings_api_page_before', 'function_name' );`
+
+	Callback arguments : `$hook_suffix`, `$options`, `$fields`
+
+3. `add_action( 'hd_settings_api_tab_before', 'function_name' );`
+
+	Callback arguments : `$hook_suffix`, `$active_tab_id`, `$options`, `$fields`
+
+4. `add_action( 'hd_settings_api_tab_after', 'function_name' );`
+
+	Callback arguments : `$hook_suffix`, `$active_tab_id`, `$options`, `$fields`
+
+
+
+**Filters**
+
+1. `add_filter( 'hd_settings_api_save_button_text', 'function_name' );`
+
+	Callback arguemnts : `$button_text`
+
+2. `add_filter( 'hd_settings_api_sanitize_option', 'function_name' );`
+
+	Callback arguemnts : `$new_value`, `$field`, `$setting`
+
+3. `add_filter( 'hd_html_helper_input_field', 'function_name' );`
+
+	Callback arguemnts : `$input_html`, `$field`, `$show_help`
+
+
+Note: where `function_name` is a callback function
+
+Please post your suggetions and requests in issues, and also help me to imrpove this documenration.
+
+
+Thank You
 -- _Harish Dasari_
+[@harishdasari](http://twitter.com/harishdasari)
+
