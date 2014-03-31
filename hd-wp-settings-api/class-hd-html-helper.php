@@ -30,10 +30,10 @@ class HD_HTML_Helper {
 
 		$form_table = '';
 
-		$form_table .= '<table class="form-table>';
+		$form_table .= '<table class="form-table">';
 
 		foreach ( (array) $fields as $field )
-			$form_table .= get_table_row( $field, $show_help );
+			$form_table .= $this->get_table_row( $field, $show_help );
 
 		$form_table .= '</table>';
 
@@ -50,7 +50,7 @@ class HD_HTML_Helper {
 	 */
 	public function display_form_table( $fields, $show_help = true ) {
 
-		echo $this->form_table( $fields, $show_help );
+		echo $this->get_form_table( $fields, $show_help );
 
 	}
 
@@ -63,7 +63,7 @@ class HD_HTML_Helper {
 	 */
 	public function get_table_row( $field, $show_help ) {
 
-		$table_row .= '<tr valign="top">';
+		$table_row = '<tr valign="top">';
 			$table_row .= sprintf( '<th><label for="%s">%s</label></th>', esc_attr( $field['id'] ), $field['title'] );
 			$table_row .= sprintf( '<td>%s</td>', $this->get_field( $field, $show_help ) );
 		$table_row .= '</tr>';
