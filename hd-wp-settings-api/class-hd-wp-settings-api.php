@@ -1,10 +1,29 @@
 <?php
 /*
-WordPress Settings API Wrapper Class
+Name: WordPress Settings API Wrapper Class
 URI: http://github.com/harishdasari
+Description: A PHP Library for creating WordPress Option Pages with tabs using WordPress Settings API
 Author: Harish Dasari
 Author URI: http://twitter.com/harishdasari
 Version: 1.1
+License: GNU General Public License v2.0 or later
+License URI: http://www.opensource.org/licenses/gpl-license.php
+*/
+
+/*  Copyright 2014 Harish Dasari  (email : harishdasari@outlook.com)
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License, version 2, as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 /*=================================================================================

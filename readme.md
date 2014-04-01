@@ -1,12 +1,12 @@
 
 ##WordPress Settings API Wrapper Class
 
-#####_Simple, Easy, Powerfull.(dot)_
-_Simple PHP Class, Easy to use and Powerfull options_
+_**Note: This is not a WordPress Plugin. This is a PHP Library for creating option pages for WordPress themes and plugins.**_
 
-Createing Options page for WordPress is now hassel free. With this PHP class you can create Top level menu pages and sub menu pages.
+Creating Options page for WordPress is now hassel free. With this PHP class you can create Top level menu pages and sub menu pages.
 
 This class uses WordPress native Settings API and can be used in both Themes and Plugins.
+
 
 You can add 10 different types of Input fields and Section also it supports WordPress tabbed interface.
 
@@ -22,6 +22,11 @@ You can add 10 different types of Input fields and Section also it supports Word
 9. Color
 10. Editor
 
+###Screenshot
+
+![WP Settings API Screenshot](https://raw.github.com/harishdasari/WP-Settings-API-Wrapper-Class/master/screenshot.png)
+
+
 ###Installation
 Copy the Directory `hd-wp-settings-api` into your theme or plugin folder.
 
@@ -32,11 +37,11 @@ Include the following code in your theme `functions.php` file or plugin file.
 ###Usage
 First you need to create
 
-1. Options for Menu Page
-2. Input fields array
+1. Defining options for Menu Page
+2. Defining input fields array
 3. Initializing Settings API Class using above options.
 
-####Creating Options for Menu Page
+####Defining Options for Menu Page
 To create a top level menu page use following
 
 	$example_options = array(
@@ -78,6 +83,12 @@ Add **input** field options and give unique `option name` as key.
 	);
 
 Alternatively you can add **Sections** and **Tabs** as well.
+
+####Initialize
+Initialize the Settings Class using above defined options and fields.
+
+	$example_settings = new HD_WP_Settings_API( $example_options, $example_fields );
+
 
 Full list of input field emamples, sections and tabs.
 
@@ -383,10 +394,13 @@ Full list of input field emamples, sections and tabs.
 
 Note: where `function_name` is a callback function
 
-Please post your suggetions and requests in issues, and also help me to imrpove this documenration.
+###License
+GNU General Public License v2.0 or later | [http://www.opensource.org/licenses/gpl-license.php](http://www.opensource.org/licenses/gpl-license.php)
 
+<hr/>
+
+Please post your suggetions and requests in issues, and also help me to imrpove this documenration.
 
 Thank You <br/>
 -- _Harish Dasari_ <br/>
 [@harishdasari](http://twitter.com/harishdasari)
-

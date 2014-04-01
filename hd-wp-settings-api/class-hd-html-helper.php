@@ -1,4 +1,5 @@
 <?php
+/* A HTML Helper Class */
 
 if ( ! class_exists( 'HD_HTML_Helper' ) ) :
 /**
